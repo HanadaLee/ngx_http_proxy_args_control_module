@@ -667,7 +667,7 @@ ngx_http_cookies_filter(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     } else {
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-            "invalid parameter: \"%V\"", &value[0]);
+            "invalid parameter: \"%V\"", &value[1]);
         return NGX_CONF_ERROR;
     }
 
