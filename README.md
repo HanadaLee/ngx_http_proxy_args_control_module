@@ -98,20 +98,25 @@ Filters cookies in the upstream request headers. All filter rules are applied in
 
 The following operators are supported:
 
-- `set`: Sets the value of a cookie. If the cookie already exists, it will be rewritten.
-- `add`: Adds a new cookie. If the cookie already exists, the operation is ignored.
-- `append`: Appends a new cookie even if the cookie already exists.
-- `rewrite`: Rewrites the value of a cookie. If the cookie doesn't exist, the operation is ignored.
-- `clear`: Removes a cookie from the request headers. If cookie name is `*`, all cookies will be cleared. Prefix wildcards such as `session_*` are also supported.
-- `keep`: Keeps specified cookies. Other cookies will be cleared.
-- `pass`: No-op; explicitly passes a cookie through and disables later same-name rules.
+| Operator  | Description                                                                                                           |
+|-----------|-----------------------------------------------------------------------------------------------------------------------|
+| `set`     | Sets the value of a cookie. If the cookie already exists, it will be rewritten.                                       |
+| `add`     | Adds a new cookie. If the cookie already exists, the operation is ignored.                                            |
+| `append`  | Appends a new cookie even if the cookie already exists.                                                               |
+| `rewrite` | Rewrites the value of a cookie. If the cookie doesn't exist, the operation is ignored.                                |
+| `clear`   | Removes a cookie from the request headers. Prefix wildcards such as `session_*` are supported. If cookie name is `*`, all cookies will be cleared. |
+| `keep`    | Keeps specified cookies. Multiple cookie names can be provided. Other cookies will be cleared.                        |
+| `pass`    | No-op; explicitly passes a cookie through and disables later same-name rules.                                         |
 
-The following parameter are supported:
+The following parameters are supported:
 
-`-i` parameter makes the cookie name case-insensitive.
-`-n` parameter keeps evaluating later same-name cookie rules after this rule applies.
-`-b` parameter makes the module stop evaluating subsequent cookie rules and output the final result after the rule applies.
-`if=condition` parameter makes the module evaluate the rule only if the condition value is not empty or '0'.
+| Parameter | Description |
+|-----------|-------------|
+| `-i` | Makes the cookie name case-insensitive. When an existing cookie is matched and needs to be set or rewritten, only its value is modified. The original name is preserved. |
+| `-n` | By default, once a cookie name is matched, subsequent rules for that name are skipped. This flag continues evaluating later rules for the same cookie name after this rule is applied. Wildcard `clear` and `keep` rules are not affected and always continue. |
+| `-b` | Stops evaluating subsequent cookie rules and outputs the final result after this rule applies. |
+| `if=condition`  | Evaluates the rule only if the condition value is not empty and not `0`. |
+| `if!=condition`  | Evaluates the rule only if the condition value is empty or `0`. |
 
 # Author
 
