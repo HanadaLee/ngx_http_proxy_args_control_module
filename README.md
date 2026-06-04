@@ -3,7 +3,7 @@
 # Name
 ngx_http_proxy_request_cookies_control_module
 
-A NGINX module for fine-grained upstream request cookies control.
+A NGINX module for fine-grained proxy request cookies control.
 
 # Table of Content
 
@@ -14,7 +14,7 @@ A NGINX module for fine-grained upstream request cookies control.
 - [Synopsis](#synopsis)
 - [Installation](#installation)
 - [Directives](#directives)
-  - [proxy\_request\_cookies\_control](#proxy_request_cookies_control)
+  - [proxy\_request\_cookie\_control](#proxy_request_cookie_control)
 - [Author](#author)
 - [License](#license)
 
@@ -30,41 +30,41 @@ http {
         listen 80;
         server_name example.com;
 
-        proxy_request_cookies_control append form_server_level 1;
+        proxy_request_cookie_control append form_server_level 1;
 
         location / {
             # If a cookie named "a" exists, set it to 1. Otherwise, add a cookie named "a" with value 1.
-            proxy_request_cookies_control set a 1;
+            proxy_request_cookie_control set a 1;
 
             # If a cookie named "b" exists, do nothing. Otherwise, add a cookie named "b" with value 2.
-            proxy_request_cookies_control add b 2;
+            proxy_request_cookie_control add b 2;
 
             # If a cookie named "c" exists, set it to 3. Otherwise, do nothing.
-            proxy_request_cookies_control rewrite c 3;
+            proxy_request_cookie_control rewrite c 3;
     
             # If a cookie named "d" exists, clear it. Otherwise, do nothing.
-            proxy_request_cookies_control clear d;
+            proxy_request_cookie_control clear d;
 
             # Clear all cookies.
-            proxy_request_cookies_control clear *;
+            proxy_request_cookie_control clear *;
 
             # Clear cookies with a prefix.
-            proxy_request_cookies_control clear session_*;
+            proxy_request_cookie_control clear session_*;
 
             # Keep cookies. Other cookies will be cleared.
-            proxy_request_cookies_control keep e f g;
+            proxy_request_cookie_control keep e f g;
 
             # Pass a cookie through and disable later same-name rules.
-            proxy_request_cookies_control pass token;
+            proxy_request_cookie_control pass token;
 
             # Conditional filtering. Only effected if varialbe $http_a is not empty or '0'.
-            proxy_request_cookies_control set h 4 if=$http_a;
+            proxy_request_cookie_control set h 4 if=$http_a;
 
             # If has `-i` option, the cookie name will be case-insensitive.
-            proxy_request_cookies_control set -i i 1;
+            proxy_request_cookie_control set -i i 1;
 
             # If has `-b`, stop evaluating subsequent rules and output the final result.
-            proxy_request_cookies_control set -b j 5;
+            proxy_request_cookie_control set -b j 5;
 
             proxy_pass http://127.0.0.1:8080;
         }
@@ -86,9 +86,9 @@ To use theses modules, configure your nginx branch with:
 
 # Directives
 
-## proxy_request_cookies_control
+## proxy_request_cookie_control
 
-**Syntax:** `proxy_request_cookies_control operator [-i] [-n] [-b] cookie_name [value] [if=condition|if!=condition];`
+**Syntax:** `proxy_request_cookie_control operator [-i] [-n] [-b] cookie_name [value] [if=condition|if!=condition];`
 
 **Default:** —
 
