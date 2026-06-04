@@ -1,21 +1,21 @@
-ngx_addon_name=ngx_http_proxy_request_cookies_filter_module
+ngx_addon_name=ngx_http_proxy_request_cookies_control_module
 
 if [ "$NGX_HTTP_PROXY_FILTER" != YES ]; then
-    echo "$0: error: ngx_http_proxy_request_cookies_filter_module requires ngx_http_proxy_filter_module"
+    echo "$0: error: ngx_http_proxy_request_cookies_control_module requires ngx_http_proxy_filter_module"
     exit 1
 fi
 
-PROXY_REQUEST_COOKIES_FILTER_INCS="$ngx_addon_dir/../ngx_http_proxy_filter_module"
+PROXY_REQUEST_COOKIES_CONTROL_INCS="$ngx_addon_dir/../ngx_http_proxy_filter_module"
 
 if [ $ngx_module_link = DYNAMIC ]; then
     ngx_module_type=HTTP
-    ngx_module_name=ngx_http_proxy_request_cookies_filter_module
-    ngx_module_incs="$PROXY_REQUEST_COOKIES_FILTER_INCS"
-    ngx_module_srcs="$ngx_addon_dir/ngx_http_proxy_request_cookies_filter_module.c"
+    ngx_module_name=ngx_http_proxy_request_cookies_control_module
+    ngx_module_incs="$PROXY_REQUEST_COOKIES_CONTROL_INCS"
+    ngx_module_srcs="$ngx_addon_dir/ngx_http_proxy_request_cookies_control_module.c"
 
     . auto/module
 else
-    HTTP_MODULES="$HTTP_MODULES ngx_http_proxy_request_cookies_filter_module"
-    HTTP_INCS="$HTTP_INCS $PROXY_REQUEST_COOKIES_FILTER_INCS"
-    NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_addon_dir/ngx_http_proxy_request_cookies_filter_module.c"
+    HTTP_MODULES="$HTTP_MODULES ngx_http_proxy_request_cookies_control_module"
+    HTTP_INCS="$HTTP_INCS $PROXY_REQUEST_COOKIES_CONTROL_INCS"
+    NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_addon_dir/ngx_http_proxy_request_cookies_control_module.c"
 fi

@@ -1,21 +1,20 @@
-# ngx_http_proxy_request_cookies_filter_module
+# ngx_http_proxy_request_cookies_control_module
 
 # Name
-ngx_http_proxy_request_cookies_filter_module
+ngx_http_proxy_request_cookies_control_module
 
 A NGINX module for fine-grained upstream request cookies control.
 
 # Table of Content
 
-- [ngx\_http\_proxy\_request\_cookies\_filter\_module](#ngx_http_proxy_request_cookies_filter_module)
+- [ngx\_http\_proxy\_request\_cookies\_control\_module](#ngx_http_proxy_request_cookies_control_module)
 - [Name](#name)
 - [Table of Content](#table-of-content)
 - [Status](#status)
 - [Synopsis](#synopsis)
 - [Installation](#installation)
 - [Directives](#directives)
-  - [proxy\_request\_cookies\_filter](#proxy_request_cookies_filter)
-  - [proxy\_request\_cookies\_filter\_inherit](#proxy_request_cookies_filter_inherit)
+  - [proxy\_request\_cookies\_control](#proxy_request_cookies_control)
 - [Author](#author)
 - [License](#license)
 
@@ -31,38 +30,41 @@ http {
         listen 80;
         server_name example.com;
 
-        proxy_request_cookies_filter append form_server_level 1;
+        proxy_request_cookies_control append form_server_level 1;
 
         location / {
-            # Inherit all cookies from server. Default value is `on`.
-            proxy_request_cookies_filter_inherit after;
-
             # If a cookie named "a" exists, set it to 1. Otherwise, add a cookie named "a" with value 1.
-            proxy_request_cookies_filter set a 1;
+            proxy_request_cookies_control set a 1;
 
-            # If a cookie named "b" exists, do nothing. Otherwise, add a cookie named "a" with value 1.
-            proxy_request_cookies_filter add b 2;
+            # If a cookie named "b" exists, do nothing. Otherwise, add a cookie named "b" with value 2.
+            proxy_request_cookies_control add b 2;
 
             # If a cookie named "c" exists, set it to 3. Otherwise, do nothing.
-            proxy_request_cookies_filter rewrite c 3;
+            proxy_request_cookies_control rewrite c 3;
     
             # If a cookie named "d" exists, clear it. Otherwise, do nothing.
-            proxy_request_cookies_filter clear d;
+            proxy_request_cookies_control clear d;
 
             # Clear all cookies.
-            proxy_request_cookies_filter clear *;
+            proxy_request_cookies_control clear *;
+
+            # Clear cookies with a prefix.
+            proxy_request_cookies_control clear session_*;
 
             # Keep cookies. Other cookies will be cleared.
-            proxy_request_cookies_filter keep e f g;
+            proxy_request_cookies_control keep e f g;
+
+            # Pass a cookie through and disable later same-name rules.
+            proxy_request_cookies_control pass token;
 
             # Conditional filtering. Only effected if varialbe $http_a is not empty or '0'.
-            proxy_request_cookies_filter set h 4 if=$http_a;
+            proxy_request_cookies_control set h 4 if=$http_a;
 
             # If has `-i` option, the cookie name will be case-insensitive.
-            proxy_request_cookies_filter set -i i 1;
+            proxy_request_cookies_control set -i i 1;
 
-            # If has `flag=break`, stop evaluating subsequent rules and output the final result.
-            proxy_request_cookies_filter set j 5 flag=break;
+            # If has `-b`, stop evaluating subsequent rules and output the final result.
+            proxy_request_cookies_control set -b j 5;
 
             proxy_pass http://127.0.0.1:8080;
         }
@@ -79,14 +81,14 @@ To use theses modules, configure your nginx branch with:
 ```bash
 ./configure \
     --add-module=/path/to/ngx_http_proxy_filter_module \
-    --add-module=/path/to/ngx_http_proxy_request_cookies_filter_module
+    --add-module=/path/to/ngx_http_proxy_request_cookies_control_module
 ```
 
 # Directives
 
-## proxy_request_cookies_filter
+## proxy_request_cookies_control
 
-**Syntax:** `proxy_request_cookies_filter opeartor [-i] cookie_name value [flag=break] [if=condition];`
+**Syntax:** `proxy_request_cookies_control operator [-i] [-b] cookie_name [value] [if=condition|if!=condition];`
 
 **Default:** —
 
@@ -100,30 +102,15 @@ The following operators are supported:
 - `add`: Adds a new cookie. If the cookie already exists, the operation is ignored.
 - `append`: Appends a new cookie even if the cookie already exists.
 - `rewrite`: Rewrites the value of a cookie. If the cookie doesn't exist, the operation is ignored.
-- `clear`: Removes a cookie from the request headers. If cookie name is `*`, all cookies will be cleared.
+- `clear`: Removes a cookie from the request headers. If cookie name is `*`, all cookies will be cleared. Prefix wildcards such as `session_*` are also supported.
 - `keep`: Keeps specified cookies. Other cookies will be cleared.
+- `pass`: No-op; explicitly passes a cookie through and disables later same-name rules.
 
 The following parameter are supported:
 
 `-i` parameter makes the cookie name case-insensitive.
-`flag=break` parameter makes the module stop evaluating subsequent rules and output the final result.
+`-b` parameter makes the module stop evaluating subsequent cookie rules and output the final result after the rule applies.
 `if=condition` parameter makes the module evaluate the rule only if the condition value is not empty or '0'.
-
-## proxy_request_cookies_filter_inherit
-
-**Syntax:** `proxy_request_cookies_filter_inherit on | off | after | before`
-
-**Default:** `proxy_request_cookies_filter_inherit on`
-
-**Context:** http, server, location
-
-Allows altering inheritance rules for the values specified in the `proxy_request_cookies_filter` directive. By default, the standard inheritance model is used.
-
-The `before` parameter specifies that the rules inherited from the previous configuration level will be applied before the rules specified in the current location block.
-
-the `after` parameter specifies that the rules inherited from the previous configuration level will be applied after the rules specified in the current location block.
-
-The `off` parameter cancels inheritance of the values from the previous configuration level.
 
 # Author
 
