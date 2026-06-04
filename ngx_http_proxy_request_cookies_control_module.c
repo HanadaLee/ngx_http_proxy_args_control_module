@@ -7,12 +7,12 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
-#include <ngx_http_proxy_filter_module.h>
-
 
 #if !defined(NGX_HTTP_PROXY_FILTER) || !(NGX_HTTP_PROXY_FILTER)
 #error "ngx_http_proxy_request_cookies_control_module requires NGX_HTTP_PROXY_FILTER"
 #endif
+
+#include <ngx_http_proxy_filter_module.h>
 
 
 typedef enum {
