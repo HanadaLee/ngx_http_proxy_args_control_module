@@ -60,7 +60,7 @@ typedef struct {
 } ngx_http_proxy_request_cookies_control_bitmap_t;
 
 
-static ngx_int_t ngx_http_proxy_request_cookies_control_handler(
+static ngx_int_t ngx_http_proxy_request_cookies_control_filter(
     ngx_http_request_t *r, ngx_http_proxy_filter_ctx_t *ctx);
 static ngx_int_t ngx_http_proxy_request_cookies_control_init(ngx_conf_t *cf);
 
@@ -262,7 +262,7 @@ ngx_http_proxy_request_cookies_control_parse_cookie_value(
 
 
 static ngx_int_t
-ngx_http_proxy_request_cookies_control_handler(ngx_http_request_t *r,
+ngx_http_proxy_request_cookies_control_filter(ngx_http_request_t *r,
     ngx_http_proxy_filter_ctx_t *ctx)
 {
     ngx_int_t                                     rc;
@@ -863,7 +863,7 @@ ngx_http_proxy_request_cookies_control_init(ngx_conf_t *cf)
         return NGX_ERROR;
     }
 
-    *h = ngx_http_proxy_request_cookies_control_handler;
+    *h = ngx_http_proxy_request_cookies_control_filter;
 
     return NGX_OK;
 }
