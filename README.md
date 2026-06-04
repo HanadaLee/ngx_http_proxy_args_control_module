@@ -88,7 +88,7 @@ To use theses modules, configure your nginx branch with:
 
 ## proxy_request_cookies_control
 
-**Syntax:** `proxy_request_cookies_control operator [-i] [-b] cookie_name [value] [if=condition|if!=condition];`
+**Syntax:** `proxy_request_cookies_control operator [-i] [-n] [-b] cookie_name [value] [if=condition|if!=condition];`
 
 **Default:** —
 
@@ -109,6 +109,7 @@ The following operators are supported:
 The following parameter are supported:
 
 `-i` parameter makes the cookie name case-insensitive.
+`-n` parameter keeps evaluating later same-name cookie rules after this rule applies.
 `-b` parameter makes the module stop evaluating subsequent cookie rules and output the final result after the rule applies.
 `if=condition` parameter makes the module evaluate the rule only if the condition value is not empty or '0'.
 

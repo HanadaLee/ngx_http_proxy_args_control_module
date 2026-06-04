@@ -35,6 +35,7 @@ typedef struct {
     ngx_http_complex_value_t                *filter;
     ngx_flag_t                               negative;
     ngx_flag_t                               ignore_case;
+    ngx_flag_t                               next;
     ngx_flag_t                               break_flag;
     ngx_flag_t                               wildcard;
     ngx_uint_t                               id;
@@ -391,6 +392,7 @@ ngx_http_proxy_request_cookies_control_exec(ngx_http_request_t *r,
         }
 
         if (!rule[i].wildcard
+            && !rule[i].next
             && rule[i].opcode
                != NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_KEEP)
         {
@@ -952,7 +954,7 @@ ngx_http_proxy_request_cookies_control_directive(ngx_conf_t *cf,
 
     cur = 2;
 
-    /* parse -i and -b */
+    /* parse -i, -n and -b */
 
     for ( ;; ) {
 
@@ -961,6 +963,15 @@ ngx_http_proxy_request_cookies_control_directive(ngx_conf_t *cf,
             && ngx_strncmp(arg[cur].data, "-i", 2) == 0)
         {
             rule->ignore_case = 1;
+            cur++;
+            continue;
+        }
+
+        if (cf->args->nelts > cur
+            && arg[cur].len == 2
+            && ngx_strncmp(arg[cur].data, "-n", 2) == 0)
+        {
+            rule->next = 1;
             cur++;
             continue;
         }
@@ -1202,7 +1213,7 @@ ngx_http_proxy_request_cookies_control_merge_loc_conf(ngx_conf_t *cf,
 
         for (i = 0; i < orig_len; i++) {
 
-            if (r[i].filter
+            if (r[i].filter || r[i].next
                 || r[i].opcode == NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_KEEP
                 || r[i].wildcard)
             {
