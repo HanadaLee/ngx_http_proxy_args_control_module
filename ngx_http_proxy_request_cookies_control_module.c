@@ -209,6 +209,7 @@ ngx_http_proxy_request_cookies_control_parse_cookie_value(
 {
     u_char                               *start, *end, *last;
     ngx_str_t                             name, value;
+
     ngx_http_proxy_request_cookies_control_cookie_t  *cookie;
 
     if (src == NULL || src->len == 0) {
@@ -265,15 +266,16 @@ static ngx_int_t
 ngx_http_proxy_request_cookies_control_filter(ngx_http_request_t *r,
     ngx_http_proxy_filter_ctx_t *ctx)
 {
-    ngx_int_t                                     rc;
     ngx_http_proxy_request_cookies_control_loc_conf_t  *clcf;
+
+    ngx_int_t  rc;
 
     if (ctx->headers == NULL) {
         return NGX_DECLINED;
     }
 
     clcf = ngx_http_get_module_loc_conf(r,
-                              ngx_http_proxy_request_cookies_control_module);
+                                ngx_http_proxy_request_cookies_control_module);
 
     rc = ngx_http_proxy_request_cookies_control_exec(r, ctx->headers,
                                                      clcf->rules,
@@ -290,13 +292,13 @@ static ngx_int_t
 ngx_http_proxy_request_cookies_control_exec(ngx_http_request_t *r,
     ngx_list_t *headers, ngx_array_t *rules, ngx_uint_t rules_cnt)
 {
-    ngx_int_t                                       rc;
-    ngx_uint_t                                      i, j;
-    ngx_uint_t                                      changed, filtered;
-    ngx_table_elt_t                                *cookie_header;
-    ngx_array_t                                    *cookies;
-    ngx_http_proxy_request_cookies_control_rule_t  *rule;
-    ngx_http_proxy_request_cookies_control_bitmap_t locked;
+    ngx_int_t                                        rc;
+    ngx_uint_t                                       i, j;
+    ngx_uint_t                                       changed, filtered;
+    ngx_table_elt_t                                 *cookie_header;
+    ngx_array_t                                     *cookies;
+    ngx_http_proxy_request_cookies_control_rule_t   *rule;
+    ngx_http_proxy_request_cookies_control_bitmap_t  locked;
 
     if (rules == NULL || rules->nelts == 0) {
         return NGX_DECLINED;
