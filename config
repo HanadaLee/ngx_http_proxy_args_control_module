@@ -23,7 +23,7 @@ then
     exit 1
 fi
 
-PROXY_ARGS_CONTROL_INCS="$ngx_addon_dir"
+PROXY_ARGS_CONTROL_INCS="$ngx_addon_dir/../ngx_http_proxy_filter_module"
 
 PROXY_ARGS_CONTROL_SRCS="$ngx_addon_dir/ngx_http_proxy_args_control_module.c"
 

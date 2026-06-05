@@ -3,18 +3,18 @@
 # Name
 ngx_http_proxy_args_control_module
 
-A NGINX module for fine-grained proxy request cookies control.
+An NGINX module for fine-grained upstream proxy URI query argument control.
 
 # Table of Content
 
-- [ngx\_http\_proxy\_request\_cookies\_control\_module](#ngx_http_proxy_args_control_module)
+- [ngx\_http\_proxy\_args\_control\_module](#ngx_http_proxy_args_control_module)
 - [Name](#name)
 - [Table of Content](#table-of-content)
 - [Status](#status)
 - [Synopsis](#synopsis)
 - [Installation](#installation)
 - [Directives](#directives)
-  - [proxy\_request\_cookie\_control](#proxy_arg_control)
+  - [proxy\_arg\_control](#proxy_arg_control)
 - [Author](#author)
 - [License](#license)
 
@@ -33,37 +33,37 @@ http {
         proxy_arg_control append form_server_level 1;
 
         location / {
-            # If a cookie named "a" exists, set it to 1. Otherwise, add a cookie named "a" with value 1.
+            # If an argument named "a" exists, set it to 1. Otherwise, add an argument named "a" with value 1.
             proxy_arg_control set a 1;
 
-            # If a cookie named "b" exists, do nothing. Otherwise, add a cookie named "b" with value 2.
+            # If an argument named "b" exists, do nothing. Otherwise, add an argument named "b" with value 2.
             proxy_arg_control add b 2;
 
-            # If a cookie named "c" exists, set it to 3. Otherwise, do nothing.
+            # If an argument named "c" exists, set it to 3. Otherwise, do nothing.
             proxy_arg_control rewrite c 3;
     
-            # If a cookie named "d" exists, clear it. Otherwise, do nothing.
+            # If an argument named "d" exists, clear it. Otherwise, do nothing.
             proxy_arg_control clear d;
 
-            # Clear all cookies.
+            # Clear all arguments.
             proxy_arg_control clear *;
 
-            # Clear cookies with a prefix.
-            proxy_arg_control clear session_*;
+            # Clear arguments with a prefix.
+            proxy_arg_control clear utm_*;
 
-            # Keep cookies. Other cookies will be cleared.
+            # Keep arguments. Other arguments will be cleared.
             proxy_arg_control keep e f g;
 
-            # Pass a cookie through and disable later same-name rules.
+            # Pass an argument through and disable later same-name rules.
             proxy_arg_control pass token;
 
-            # Conditional filtering. Only effected if varialbe $http_a is not empty or '0'.
+            # Conditional filtering. Only effective if variable $http_a is not empty or '0'.
             proxy_arg_control set h 4 if=$http_a;
 
-            # If has `-i` option, the cookie name will be case-insensitive.
+            # With the `-i` option, the argument name will be case-insensitive.
             proxy_arg_control set -i i 1;
 
-            # If has `-b`, stop evaluating subsequent rules and output the final result.
+            # With `-b`, stop evaluating subsequent rules and output the final result.
             proxy_arg_control set -b j 5;
 
             proxy_pass http://127.0.0.1:8080;
@@ -76,7 +76,7 @@ http {
 
 This module requires [ngx_http_proxy_filter_module](https://github.com/your-repo/ngx_http_proxy_filter_module) to be compiled first.
 
-To use theses modules, configure your nginx branch with:
+To use these modules, configure your nginx branch with:
 
 ```bash
 ./configure \
@@ -88,33 +88,33 @@ To use theses modules, configure your nginx branch with:
 
 ## proxy_arg_control
 
-**Syntax:** `proxy_arg_control operator [-i] [-n] [-b] cookie_name [value] [if=condition|if!=condition];`
+**Syntax:** `proxy_arg_control operator [-i] [-n] [-b] arg_name [value] [if=condition|if!=condition];`
 
 **Default:** —
 
 **Context:** http, server, location
 
-Filters cookies in the upstream request headers. All filter rules are applied in the order they are defined. The result directly modifies the `Cookie` header sent to the upstream.
+Controls the query arguments in the upstream proxy URI. The module reads the full proxy URI, applies rules to the query string, rebuilds the URI, and writes it back before proxying.
 
 The following operators are supported:
 
 | Operator  | Description                                                                                                           |
 |-----------|-----------------------------------------------------------------------------------------------------------------------|
-| `set`     | Sets the value of a cookie. If the cookie already exists, it will be rewritten.                                       |
-| `add`     | Adds a new cookie. If the cookie already exists, the operation is ignored.                                            |
-| `append`  | Appends a new cookie even if the cookie already exists.                                                               |
-| `rewrite` | Rewrites the value of a cookie. If the cookie doesn't exist, the operation is ignored.                                |
-| `clear`   | Removes a cookie from the request headers. Prefix wildcards such as `session_*` are supported. If cookie name is `*`, all cookies will be cleared. |
-| `keep`    | Keeps specified cookies. Multiple cookie names can be provided. Other cookies will be cleared.                        |
-| `pass`    | No-op; explicitly passes a cookie through and disables later same-name rules.                                         |
+| `set`     | Sets the value of an argument. If the argument already exists, it will be rewritten.                                       |
+| `add`     | Adds a new argument. If the argument already exists, the operation is ignored.                                            |
+| `append`  | Appends a new argument even if the argument already exists.                                                               |
+| `rewrite` | Rewrites the value of an argument. If the argument doesn't exist, the operation is ignored.                                |
+| `clear`   | Removes an argument from the proxy URI. Prefix wildcards such as `utm_*` are supported. If argument name is `*`, all arguments will be cleared. |
+| `keep`    | Keeps specified arguments. Multiple argument names can be provided. Other arguments will be cleared.                        |
+| `pass`    | No-op; explicitly passes an argument through and disables later same-name rules.                                         |
 
 The following parameters are supported:
 
 | Parameter | Description |
 |-----------|-------------|
-| `-i` | Makes the cookie name case-insensitive. When an existing cookie is matched and needs to be set or rewritten, only its value is modified. The original name is preserved. |
-| `-n` | By default, once a cookie name is matched, subsequent rules for that name are skipped. This flag continues evaluating later rules for the same cookie name after this rule is applied. Wildcard `clear` and `keep` rules are not affected and always continue. |
-| `-b` | Stops evaluating subsequent cookie rules and outputs the final result after this rule applies. |
+| `-i` | Makes the argument name case-insensitive. When an existing argument is matched and needs to be set or rewritten, only its value is modified. The original name is preserved. |
+| `-n` | By default, once an argument name is matched, subsequent rules for that name are skipped. This flag continues evaluating later rules for the same argument name after this rule is applied. Wildcard `clear` and `keep` rules are not affected and always continue. |
+| `-b` | Stops evaluating subsequent argument rules and outputs the final result after this rule applies. |
 | `if=condition`  | Evaluates the rule only if the condition value is not empty and not `0`. |
 | `if!=condition`  | Evaluates the rule only if the condition value is empty or `0`. |
 
