@@ -9,22 +9,22 @@
 #include <ngx_http.h>
 
 #if !defined(NGX_HTTP_PROXY_FILTER) || !(NGX_HTTP_PROXY_FILTER)
-#error "ngx_http_proxy_request_cookies_control_module requires NGX_HTTP_PROXY_FILTER"
+#error "ngx_http_proxy_args_control_module requires NGX_HTTP_PROXY_FILTER"
 #endif
 
 #include <ngx_http_proxy_filter_module.h>
 
 
 typedef enum {
-    NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_SET = 0,
-    NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_ADD,
-    NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_APPEND,
-    NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_REWRITE,
-    NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_CLEAR,
-    NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_CLEAR_ALL,
-    NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_KEEP,
-    NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_PASS
-} ngx_http_proxy_request_cookies_control_opcode_e;
+    NGX_HTTP_PROXY_ARGS_CONTROL_SET = 0,
+    NGX_HTTP_PROXY_ARGS_CONTROL_ADD,
+    NGX_HTTP_PROXY_ARGS_CONTROL_APPEND,
+    NGX_HTTP_PROXY_ARGS_CONTROL_REWRITE,
+    NGX_HTTP_PROXY_ARGS_CONTROL_CLEAR,
+    NGX_HTTP_PROXY_ARGS_CONTROL_CLEAR_ALL,
+    NGX_HTTP_PROXY_ARGS_CONTROL_KEEP,
+    NGX_HTTP_PROXY_ARGS_CONTROL_PASS
+} ngx_http_proxy_args_control_opcode_e;
 
 
 typedef struct {
@@ -39,78 +39,78 @@ typedef struct {
     ngx_flag_t                               break_flag;
     ngx_flag_t                               wildcard;
     ngx_uint_t                               id;
-} ngx_http_proxy_request_cookies_control_rule_t;
+} ngx_http_proxy_args_control_rule_t;
 
 
 typedef struct {
     ngx_array_t                             *rules;
     ngx_uint_t                               rules_cnt;
-} ngx_http_proxy_request_cookies_control_loc_conf_t;
+} ngx_http_proxy_args_control_loc_conf_t;
 
 
 typedef struct {
     ngx_str_t                                name;
     ngx_str_t                                value;
     ngx_uint_t                               cleared;
-} ngx_http_proxy_request_cookies_control_cookie_t;
+} ngx_http_proxy_args_control_cookie_t;
 
 
 typedef struct {
     ngx_uint_t                              *bits;
     ngx_uint_t                               size;
-} ngx_http_proxy_request_cookies_control_bitmap_t;
+} ngx_http_proxy_args_control_bitmap_t;
 
 
-static ngx_int_t ngx_http_proxy_request_cookies_control_filter(
+static ngx_int_t ngx_http_proxy_args_control_filter(
     ngx_http_request_t *r, ngx_http_proxy_filter_ctx_t *ctx);
-static ngx_int_t ngx_http_proxy_request_cookies_control_init(ngx_conf_t *cf);
+static ngx_int_t ngx_http_proxy_args_control_init(ngx_conf_t *cf);
 
-static ngx_int_t ngx_http_proxy_request_cookies_control_parse_cookie_value(
+static ngx_int_t ngx_http_proxy_args_control_parse_cookie_value(
     ngx_http_request_t *r, ngx_str_t *src, ngx_array_t *cookies);
 
-static ngx_int_t ngx_http_proxy_request_cookies_control_exec(
+static ngx_int_t ngx_http_proxy_args_control_exec(
     ngx_http_request_t *r, ngx_list_t *headers, ngx_array_t *rules,
     ngx_uint_t rules_cnt);
-static ngx_int_t ngx_http_proxy_request_cookies_control_parse_headers(
+static ngx_int_t ngx_http_proxy_args_control_parse_headers(
     ngx_http_request_t *r, ngx_list_t *headers, ngx_array_t *cookies,
     ngx_table_elt_t **cookie_header);
-static ngx_int_t ngx_http_proxy_request_cookies_control_exec_rule(
+static ngx_int_t ngx_http_proxy_args_control_exec_rule(
     ngx_http_request_t *r, ngx_array_t **cookies,
-    ngx_http_proxy_request_cookies_control_rule_t *rule,
+    ngx_http_proxy_args_control_rule_t *rule,
     ngx_uint_t *changed);
-static ngx_int_t ngx_http_proxy_request_cookies_control_rebuild_header(
+static ngx_int_t ngx_http_proxy_args_control_rebuild_header(
     ngx_http_request_t *r, ngx_list_t *headers,
     ngx_table_elt_t *cookie_header, ngx_array_t *cookies);
-static ngx_int_t ngx_http_proxy_request_cookies_control_is_cookie_header(
+static ngx_int_t ngx_http_proxy_args_control_is_cookie_header(
     ngx_table_elt_t *h);
-static ngx_int_t ngx_http_proxy_request_cookies_control_match_rule_name(
-    ngx_str_t *name, ngx_http_proxy_request_cookies_control_rule_t *rule);
-static ngx_int_t ngx_http_proxy_request_cookies_control_match_name(
+static ngx_int_t ngx_http_proxy_args_control_match_rule_name(
+    ngx_str_t *name, ngx_http_proxy_args_control_rule_t *rule);
+static ngx_int_t ngx_http_proxy_args_control_match_name(
     ngx_str_t *name, ngx_str_t *pattern, ngx_flag_t ignore_case);
 
-static char *ngx_http_proxy_request_cookies_control_directive(
+static char *ngx_http_proxy_args_control_directive(
     ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 
-static void *ngx_http_proxy_request_cookies_control_create_loc_conf(
+static void *ngx_http_proxy_args_control_create_loc_conf(
     ngx_conf_t *cf);
-static char *ngx_http_proxy_request_cookies_control_merge_loc_conf(
+static char *ngx_http_proxy_args_control_merge_loc_conf(
     ngx_conf_t *cf, void *parent, void *child);
 
-static ngx_int_t ngx_http_proxy_request_cookies_control_bitmap_init(
-    ngx_http_proxy_request_cookies_control_bitmap_t *bm, ngx_uint_t size,
+static ngx_int_t ngx_http_proxy_args_control_bitmap_init(
+    ngx_http_proxy_args_control_bitmap_t *bm, ngx_uint_t size,
     ngx_pool_t *pool);
-static void ngx_http_proxy_request_cookies_control_bitmap_set(
-    ngx_http_proxy_request_cookies_control_bitmap_t *bm, ngx_uint_t bit);
-static ngx_int_t ngx_http_proxy_request_cookies_control_bitmap_isset(
-    ngx_http_proxy_request_cookies_control_bitmap_t *bm, ngx_uint_t bit);
+static void ngx_http_proxy_args_control_bitmap_set(
+    ngx_http_proxy_args_control_bitmap_t *bm, ngx_uint_t bit);
+static ngx_int_t ngx_http_proxy_args_control_bitmap_isset(
+    ngx_http_proxy_args_control_bitmap_t *bm, ngx_uint_t bit);
 
 
-static ngx_command_t  ngx_http_proxy_request_cookies_control_commands[] = {
+static ngx_command_t  ngx_http_proxy_args_control_commands[] = {
 
-    { ngx_string("proxy_request_cookie_control"),
+    { ngx_string("proxy_arg_control"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
                         |NGX_CONF_2MORE,
-      ngx_http_proxy_request_cookies_control_directive,
+      ngx_http_proxy_args_control_directive,
       NGX_HTTP_LOC_CONF_OFFSET,
       0,
       NULL },
@@ -119,24 +119,24 @@ static ngx_command_t  ngx_http_proxy_request_cookies_control_commands[] = {
 };
 
 
-static ngx_http_module_t  ngx_http_proxy_request_cookies_control_module_ctx = {
+static ngx_http_module_t  ngx_http_proxy_args_control_module_ctx = {
     NULL,                                          /* preconfiguration */
-    ngx_http_proxy_request_cookies_control_init,   /* postconfiguration */
+    ngx_http_proxy_args_control_init,   /* postconfiguration */
     NULL,                                          /* create main conf */
     NULL,                                          /* init main conf */
     NULL,                                          /* create server conf */
     NULL,                                          /* merge server conf */
-    ngx_http_proxy_request_cookies_control_create_loc_conf,
+    ngx_http_proxy_args_control_create_loc_conf,
                                                    /* create loc conf */
-    ngx_http_proxy_request_cookies_control_merge_loc_conf
+    ngx_http_proxy_args_control_merge_loc_conf
                                                    /* merge loc conf */
 };
 
 
-ngx_module_t  ngx_http_proxy_request_cookies_control_module = {
+ngx_module_t  ngx_http_proxy_args_control_module = {
     NGX_MODULE_V1,
-    &ngx_http_proxy_request_cookies_control_module_ctx, /* module context */
-    ngx_http_proxy_request_cookies_control_commands,    /* directives */
+    &ngx_http_proxy_args_control_module_ctx, /* module context */
+    ngx_http_proxy_args_control_commands,    /* directives */
     NGX_HTTP_MODULE,                                    /* module type */
     NULL,                                               /* init master */
     NULL,                                               /* init module */
@@ -150,8 +150,8 @@ ngx_module_t  ngx_http_proxy_request_cookies_control_module = {
 
 
 static ngx_int_t
-ngx_http_proxy_request_cookies_control_bitmap_init(
-    ngx_http_proxy_request_cookies_control_bitmap_t *bm, ngx_uint_t size,
+ngx_http_proxy_args_control_bitmap_init(
+    ngx_http_proxy_args_control_bitmap_t *bm, ngx_uint_t size,
     ngx_pool_t *pool)
 {
     ngx_uint_t  n;
@@ -175,8 +175,8 @@ ngx_http_proxy_request_cookies_control_bitmap_init(
 
 
 static void
-ngx_http_proxy_request_cookies_control_bitmap_set(
-    ngx_http_proxy_request_cookies_control_bitmap_t *bm, ngx_uint_t bit)
+ngx_http_proxy_args_control_bitmap_set(
+    ngx_http_proxy_args_control_bitmap_t *bm, ngx_uint_t bit)
 {
     if (bm->bits && bit < bm->size) {
         bm->bits[bit / NGX_INT_T_LEN]
@@ -186,8 +186,8 @@ ngx_http_proxy_request_cookies_control_bitmap_set(
 
 
 static ngx_int_t
-ngx_http_proxy_request_cookies_control_bitmap_isset(
-    ngx_http_proxy_request_cookies_control_bitmap_t *bm, ngx_uint_t bit)
+ngx_http_proxy_args_control_bitmap_isset(
+    ngx_http_proxy_args_control_bitmap_t *bm, ngx_uint_t bit)
 {
     if (bm->bits == NULL || bit >= bm->size) {
         return NGX_DECLINED;
@@ -205,13 +205,13 @@ ngx_http_proxy_request_cookies_control_bitmap_isset(
 
 
 static ngx_int_t
-ngx_http_proxy_request_cookies_control_parse_cookie_value(
+ngx_http_proxy_args_control_parse_cookie_value(
     ngx_http_request_t *r, ngx_str_t *src, ngx_array_t *cookies)
 {
     u_char                               *start, *end, *last;
     ngx_str_t                             name, value;
 
-    ngx_http_proxy_request_cookies_control_cookie_t  *cookie;
+    ngx_http_proxy_args_control_cookie_t  *cookie;
 
     if (src == NULL || src->len == 0) {
         return NGX_OK;
@@ -264,10 +264,10 @@ ngx_http_proxy_request_cookies_control_parse_cookie_value(
 
 
 static ngx_int_t
-ngx_http_proxy_request_cookies_control_filter(ngx_http_request_t *r,
+ngx_http_proxy_args_control_filter(ngx_http_request_t *r,
     ngx_http_proxy_filter_ctx_t *ctx)
 {
-    ngx_http_proxy_request_cookies_control_loc_conf_t  *clcf;
+    ngx_http_proxy_args_control_loc_conf_t  *clcf;
 
     ngx_int_t  rc;
 
@@ -276,9 +276,9 @@ ngx_http_proxy_request_cookies_control_filter(ngx_http_request_t *r,
     }
 
     clcf = ngx_http_get_module_loc_conf(r,
-                                ngx_http_proxy_request_cookies_control_module);
+                                ngx_http_proxy_args_control_module);
 
-    rc = ngx_http_proxy_request_cookies_control_exec(r, ctx->headers,
+    rc = ngx_http_proxy_args_control_exec(r, ctx->headers,
                                                      clcf->rules,
                                                      clcf->rules_cnt);
     if (rc != NGX_OK) {
@@ -290,7 +290,7 @@ ngx_http_proxy_request_cookies_control_filter(ngx_http_request_t *r,
 
 
 static ngx_int_t
-ngx_http_proxy_request_cookies_control_exec(ngx_http_request_t *r,
+ngx_http_proxy_args_control_exec(ngx_http_request_t *r,
     ngx_list_t *headers, ngx_array_t *rules, ngx_uint_t rules_cnt)
 {
     ngx_int_t                                        rc;
@@ -298,8 +298,8 @@ ngx_http_proxy_request_cookies_control_exec(ngx_http_request_t *r,
     ngx_uint_t                                       changed, filtered;
     ngx_table_elt_t                                 *cookie_header;
     ngx_array_t                                     *cookies;
-    ngx_http_proxy_request_cookies_control_rule_t   *rule;
-    ngx_http_proxy_request_cookies_control_bitmap_t  locked;
+    ngx_http_proxy_args_control_rule_t   *rule;
+    ngx_http_proxy_args_control_bitmap_t  locked;
 
     if (rules == NULL || rules->nelts == 0) {
         return NGX_DECLINED;
@@ -310,13 +310,13 @@ ngx_http_proxy_request_cookies_control_exec(ngx_http_request_t *r,
     }
 
     cookies = ngx_array_create(r->pool, 4,
-                    sizeof(ngx_http_proxy_request_cookies_control_cookie_t));
+                    sizeof(ngx_http_proxy_args_control_cookie_t));
     if (cookies == NULL) {
         return NGX_ERROR;
     }
 
     cookie_header = NULL;
-    if (ngx_http_proxy_request_cookies_control_parse_headers(r, headers,
+    if (ngx_http_proxy_args_control_parse_headers(r, headers,
                                                              cookies,
                                                              &cookie_header)
         != NGX_OK)
@@ -324,7 +324,7 @@ ngx_http_proxy_request_cookies_control_exec(ngx_http_request_t *r,
         return NGX_ERROR;
     }
 
-    if (ngx_http_proxy_request_cookies_control_bitmap_init(&locked, rules_cnt,
+    if (ngx_http_proxy_args_control_bitmap_init(&locked, rules_cnt,
                                                            r->pool)
         != NGX_OK)
     {
@@ -338,12 +338,12 @@ ngx_http_proxy_request_cookies_control_exec(ngx_http_request_t *r,
 
         if (!rule[i].wildcard
             && rule[i].opcode
-               != NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_KEEP)
+               != NGX_HTTP_PROXY_ARGS_CONTROL_KEEP)
         {
             for (j = 0; j < i; j++) {
                 if (rule[j].wildcard
                     || rule[j].opcode
-                       == NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_KEEP)
+                       == NGX_HTTP_PROXY_ARGS_CONTROL_KEEP)
                 {
                     continue;
                 }
@@ -359,7 +359,7 @@ ngx_http_proxy_request_cookies_control_exec(ngx_http_request_t *r,
                     continue;
                 }
 
-                if (ngx_http_proxy_request_cookies_control_bitmap_isset(
+                if (ngx_http_proxy_args_control_bitmap_isset(
                         &locked, rule[j].id)
                     != NGX_OK)
                 {
@@ -375,7 +375,7 @@ ngx_http_proxy_request_cookies_control_exec(ngx_http_request_t *r,
         }
 
         changed = 0;
-        rc = ngx_http_proxy_request_cookies_control_exec_rule(r, &cookies,
+        rc = ngx_http_proxy_args_control_exec_rule(r, &cookies,
                                                               &rule[i],
                                                               &changed);
 
@@ -394,9 +394,9 @@ ngx_http_proxy_request_cookies_control_exec(ngx_http_request_t *r,
         if (!rule[i].wildcard
             && !rule[i].next
             && rule[i].opcode
-               != NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_KEEP)
+               != NGX_HTTP_PROXY_ARGS_CONTROL_KEEP)
         {
-            ngx_http_proxy_request_cookies_control_bitmap_set(&locked,
+            ngx_http_proxy_args_control_bitmap_set(&locked,
                                                               rule[i].id);
         }
 
@@ -409,14 +409,14 @@ ngx_http_proxy_request_cookies_control_exec(ngx_http_request_t *r,
         return NGX_DECLINED;
     }
 
-    return ngx_http_proxy_request_cookies_control_rebuild_header(r, headers,
+    return ngx_http_proxy_args_control_rebuild_header(r, headers,
                                                                  cookie_header,
                                                                  cookies);
 }
 
 
 static ngx_int_t
-ngx_http_proxy_request_cookies_control_parse_headers(ngx_http_request_t *r,
+ngx_http_proxy_args_control_parse_headers(ngx_http_request_t *r,
     ngx_list_t *headers, ngx_array_t *cookies, ngx_table_elt_t **cookie_header)
 {
     ngx_uint_t        i;
@@ -439,7 +439,7 @@ ngx_http_proxy_request_cookies_control_parse_headers(ngx_http_request_t *r,
             i = 0;
         }
 
-        if (ngx_http_proxy_request_cookies_control_is_cookie_header(&h[i])
+        if (ngx_http_proxy_args_control_is_cookie_header(&h[i])
             != NGX_OK)
         {
             continue;
@@ -453,7 +453,7 @@ ngx_http_proxy_request_cookies_control_parse_headers(ngx_http_request_t *r,
             continue;
         }
 
-        if (ngx_http_proxy_request_cookies_control_parse_cookie_value(
+        if (ngx_http_proxy_args_control_parse_cookie_value(
                 r, &h[i].value, cookies)
             != NGX_OK)
         {
@@ -466,15 +466,15 @@ ngx_http_proxy_request_cookies_control_parse_headers(ngx_http_request_t *r,
 
 
 static ngx_int_t
-ngx_http_proxy_request_cookies_control_exec_rule(ngx_http_request_t *r,
-    ngx_array_t **cookies, ngx_http_proxy_request_cookies_control_rule_t *rule,
+ngx_http_proxy_args_control_exec_rule(ngx_http_request_t *r,
+    ngx_array_t **cookies, ngx_http_proxy_args_control_rule_t *rule,
     ngx_uint_t *changed)
 {
     ngx_str_t                                        value, *n;
     ngx_uint_t                                       i, j;
     ngx_uint_t                                       found, matched;
     ngx_array_t                                     *new_cookies;
-    ngx_http_proxy_request_cookies_control_cookie_t *cookie, *new_cookie;
+    ngx_http_proxy_args_control_cookie_t *cookie, *new_cookie;
 
     *changed = 0;
 
@@ -495,13 +495,13 @@ ngx_http_proxy_request_cookies_control_exec_rule(ngx_http_request_t *r,
         }
     }
 
-    if (rule->opcode == NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_PASS) {
+    if (rule->opcode == NGX_HTTP_PROXY_ARGS_CONTROL_PASS) {
         return NGX_OK;
     }
 
     cookie = (*cookies)->elts;
 
-    if (rule->opcode == NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_CLEAR_ALL) {
+    if (rule->opcode == NGX_HTTP_PROXY_ARGS_CONTROL_CLEAR_ALL) {
         *changed = 1;
 
         for (i = 0; i < (*cookies)->nelts; i++) {
@@ -514,10 +514,10 @@ ngx_http_proxy_request_cookies_control_exec_rule(ngx_http_request_t *r,
         return NGX_OK;
     }
 
-    if (rule->opcode == NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_KEEP) {
+    if (rule->opcode == NGX_HTTP_PROXY_ARGS_CONTROL_KEEP) {
         new_cookies = ngx_array_create(r->pool,
                                        ngx_max(rule->name_list->nelts, 4),
-                  sizeof(ngx_http_proxy_request_cookies_control_cookie_t));
+                  sizeof(ngx_http_proxy_args_control_cookie_t));
         if (new_cookies == NULL) {
             return NGX_ERROR;
         }
@@ -532,7 +532,7 @@ ngx_http_proxy_request_cookies_control_exec_rule(ngx_http_request_t *r,
             for (j = 0; j < rule->name_list->nelts; j++) {
                 n = (ngx_str_t *) rule->name_list->elts + j;
 
-                if (ngx_http_proxy_request_cookies_control_match_name(
+                if (ngx_http_proxy_args_control_match_name(
                         &cookie[i].name, n, rule->ignore_case)
                     == NGX_OK)
                 {
@@ -560,13 +560,13 @@ ngx_http_proxy_request_cookies_control_exec_rule(ngx_http_request_t *r,
         return NGX_OK;
     }
 
-    if (rule->opcode != NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_CLEAR) {
+    if (rule->opcode != NGX_HTTP_PROXY_ARGS_CONTROL_CLEAR) {
         if (ngx_http_complex_value(r, rule->value, &value) != NGX_OK) {
             return NGX_ERROR;
         }
     }
 
-    if (rule->opcode == NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_APPEND) {
+    if (rule->opcode == NGX_HTTP_PROXY_ARGS_CONTROL_APPEND) {
         if (value.len == 0) {
             return NGX_OK;
         }
@@ -592,14 +592,14 @@ ngx_http_proxy_request_cookies_control_exec_rule(ngx_http_request_t *r,
             continue;
         }
 
-        if (ngx_http_proxy_request_cookies_control_match_rule_name(
+        if (ngx_http_proxy_args_control_match_rule_name(
                 &cookie[i].name, rule)
             != NGX_OK)
         {
             continue;
         }
 
-        if (rule->opcode == NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_ADD) {
+        if (rule->opcode == NGX_HTTP_PROXY_ARGS_CONTROL_ADD) {
             found = 1;
             break;
         }
@@ -607,7 +607,7 @@ ngx_http_proxy_request_cookies_control_exec_rule(ngx_http_request_t *r,
         matched = found;
         found = 1;
 
-        if (rule->opcode == NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_CLEAR
+        if (rule->opcode == NGX_HTTP_PROXY_ARGS_CONTROL_CLEAR
             || value.len == 0
             || matched)
         {
@@ -624,8 +624,8 @@ ngx_http_proxy_request_cookies_control_exec_rule(ngx_http_request_t *r,
         return NGX_OK;
     }
 
-    if (rule->opcode == NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_CLEAR
-        || rule->opcode == NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_REWRITE
+    if (rule->opcode == NGX_HTTP_PROXY_ARGS_CONTROL_CLEAR
+        || rule->opcode == NGX_HTTP_PROXY_ARGS_CONTROL_REWRITE
         || value.len == 0)
     {
         return NGX_OK;
@@ -646,7 +646,7 @@ ngx_http_proxy_request_cookies_control_exec_rule(ngx_http_request_t *r,
 
 
 static ngx_int_t
-ngx_http_proxy_request_cookies_control_rebuild_header(ngx_http_request_t *r,
+ngx_http_proxy_args_control_rebuild_header(ngx_http_request_t *r,
     ngx_list_t *headers, ngx_table_elt_t *cookie_header, ngx_array_t *cookies)
 {
     size_t                                           len;
@@ -654,7 +654,7 @@ ngx_http_proxy_request_cookies_control_rebuild_header(ngx_http_request_t *r,
     ngx_uint_t                                       i, first;
     ngx_list_part_t                                 *part;
     ngx_table_elt_t                                 *h;
-    ngx_http_proxy_request_cookies_control_cookie_t *cookie;
+    ngx_http_proxy_args_control_cookie_t *cookie;
 
     len = 0;
     cookie = cookies->elts;
@@ -682,7 +682,7 @@ ngx_http_proxy_request_cookies_control_rebuild_header(ngx_http_request_t *r,
                 i = 0;
             }
 
-            if (ngx_http_proxy_request_cookies_control_is_cookie_header(&h[i])
+            if (ngx_http_proxy_args_control_is_cookie_header(&h[i])
                 == NGX_OK)
             {
                 h[i].hash = 0;
@@ -756,7 +756,7 @@ ngx_http_proxy_request_cookies_control_rebuild_header(ngx_http_request_t *r,
             continue;
         }
 
-        if (ngx_http_proxy_request_cookies_control_is_cookie_header(&h[i])
+        if (ngx_http_proxy_args_control_is_cookie_header(&h[i])
             == NGX_OK)
         {
             h[i].hash = 0;
@@ -770,7 +770,7 @@ ngx_http_proxy_request_cookies_control_rebuild_header(ngx_http_request_t *r,
 
 
 static ngx_int_t
-ngx_http_proxy_request_cookies_control_is_cookie_header(ngx_table_elt_t *h)
+ngx_http_proxy_args_control_is_cookie_header(ngx_table_elt_t *h)
 {
     if (h->hash == 0) {
         return NGX_DECLINED;
@@ -792,8 +792,8 @@ ngx_http_proxy_request_cookies_control_is_cookie_header(ngx_table_elt_t *h)
 
 
 static ngx_int_t
-ngx_http_proxy_request_cookies_control_match_rule_name(ngx_str_t *name,
-    ngx_http_proxy_request_cookies_control_rule_t *rule)
+ngx_http_proxy_args_control_match_rule_name(ngx_str_t *name,
+    ngx_http_proxy_args_control_rule_t *rule)
 {
     ngx_str_t  pattern;
 
@@ -821,13 +821,13 @@ ngx_http_proxy_request_cookies_control_match_rule_name(ngx_str_t *name,
         return NGX_OK;
     }
 
-    return ngx_http_proxy_request_cookies_control_match_name(name, &pattern,
+    return ngx_http_proxy_args_control_match_name(name, &pattern,
                                                             rule->ignore_case);
 }
 
 
 static ngx_int_t
-ngx_http_proxy_request_cookies_control_match_name(ngx_str_t *name,
+ngx_http_proxy_args_control_match_name(ngx_str_t *name,
     ngx_str_t *pattern, ngx_flag_t ignore_case)
 {
     if (name->len != pattern->len) {
@@ -851,7 +851,7 @@ ngx_http_proxy_request_cookies_control_match_name(ngx_str_t *name,
 
 
 static ngx_int_t
-ngx_http_proxy_request_cookies_control_init(ngx_conf_t *cf)
+ngx_http_proxy_args_control_init(ngx_conf_t *cf)
 {
     ngx_http_proxy_filter_pt          *h;
     ngx_http_proxy_filter_main_conf_t *pmcf;
@@ -867,22 +867,22 @@ ngx_http_proxy_request_cookies_control_init(ngx_conf_t *cf)
         return NGX_ERROR;
     }
 
-    *h = ngx_http_proxy_request_cookies_control_filter;
+    *h = ngx_http_proxy_args_control_filter;
 
     return NGX_OK;
 }
 
 
 static char *
-ngx_http_proxy_request_cookies_control_directive(ngx_conf_t *cf,
+ngx_http_proxy_args_control_directive(ngx_conf_t *cf,
     ngx_command_t *cmd, void *conf)
 {
-    ngx_http_proxy_request_cookies_control_loc_conf_t *clcf = conf;
+    ngx_http_proxy_args_control_loc_conf_t *clcf = conf;
 
     ngx_str_t                                        *arg, s, *n;
     ngx_uint_t                                        cur;
     ngx_http_compile_complex_value_t                  ccv;
-    ngx_http_proxy_request_cookies_control_rule_t    *rule;
+    ngx_http_proxy_args_control_rule_t    *rule;
 
     arg = cf->args->elts;
 
@@ -895,7 +895,7 @@ ngx_http_proxy_request_cookies_control_directive(ngx_conf_t *cf,
 
     if (clcf->rules == NULL) {
         clcf->rules = ngx_array_create(cf->pool, 4,
-                    sizeof(ngx_http_proxy_request_cookies_control_rule_t));
+                    sizeof(ngx_http_proxy_args_control_rule_t));
         if (clcf->rules == NULL) {
             return NGX_CONF_ERROR;
         }
@@ -907,44 +907,44 @@ ngx_http_proxy_request_cookies_control_directive(ngx_conf_t *cf,
     }
 
     ngx_memzero(rule,
-                sizeof(ngx_http_proxy_request_cookies_control_rule_t));
+                sizeof(ngx_http_proxy_args_control_rule_t));
 
     /* parse operation */
 
     if (arg[1].len == 3
         && ngx_strncasecmp(arg[1].data, (u_char *) "set", 3) == 0)
     {
-        rule->opcode = NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_SET;
+        rule->opcode = NGX_HTTP_PROXY_ARGS_CONTROL_SET;
 
     } else if (arg[1].len == 3
                && ngx_strncasecmp(arg[1].data, (u_char *) "add", 3) == 0)
     {
-        rule->opcode = NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_ADD;
+        rule->opcode = NGX_HTTP_PROXY_ARGS_CONTROL_ADD;
 
     } else if (arg[1].len == 6
                && ngx_strncasecmp(arg[1].data, (u_char *) "append", 6) == 0)
     {
-        rule->opcode = NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_APPEND;
+        rule->opcode = NGX_HTTP_PROXY_ARGS_CONTROL_APPEND;
 
     } else if (arg[1].len == 7
                && ngx_strncasecmp(arg[1].data, (u_char *) "rewrite", 7) == 0)
     {
-        rule->opcode = NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_REWRITE;
+        rule->opcode = NGX_HTTP_PROXY_ARGS_CONTROL_REWRITE;
 
     } else if (arg[1].len == 5
                && ngx_strncasecmp(arg[1].data, (u_char *) "clear", 5) == 0)
     {
-        rule->opcode = NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_CLEAR;
+        rule->opcode = NGX_HTTP_PROXY_ARGS_CONTROL_CLEAR;
 
     } else if (arg[1].len == 4
                && ngx_strncasecmp(arg[1].data, (u_char *) "keep", 4) == 0)
     {
-        rule->opcode = NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_KEEP;
+        rule->opcode = NGX_HTTP_PROXY_ARGS_CONTROL_KEEP;
 
     } else if (arg[1].len == 4
                && ngx_strncasecmp(arg[1].data, (u_char *) "pass", 4) == 0)
     {
-        rule->opcode = NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_PASS;
+        rule->opcode = NGX_HTTP_PROXY_ARGS_CONTROL_PASS;
 
     } else {
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
@@ -990,7 +990,7 @@ ngx_http_proxy_request_cookies_control_directive(ngx_conf_t *cf,
 
     /* parse cookie name or name_list */
 
-    if (rule->opcode == NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_KEEP) {
+    if (rule->opcode == NGX_HTTP_PROXY_ARGS_CONTROL_KEEP) {
 
         if (cf->args->nelts <= cur) {
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
@@ -1066,7 +1066,7 @@ ngx_http_proxy_request_cookies_control_directive(ngx_conf_t *cf,
         rule->wildcard = (rule->name.data[rule->name.len - 1] == '*');
 
         if (rule->wildcard) {
-            if (rule->opcode != NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_CLEAR) {
+            if (rule->opcode != NGX_HTTP_PROXY_ARGS_CONTROL_CLEAR) {
                 ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
                                    "\"%V\" wildcard is only supported by clear",
                                    &cmd->name);
@@ -1074,7 +1074,7 @@ ngx_http_proxy_request_cookies_control_directive(ngx_conf_t *cf,
             }
 
             if (rule->name.len == 1) {
-                rule->opcode = NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_CLEAR_ALL;
+                rule->opcode = NGX_HTTP_PROXY_ARGS_CONTROL_CLEAR_ALL;
             }
         }
 
@@ -1082,9 +1082,9 @@ ngx_http_proxy_request_cookies_control_directive(ngx_conf_t *cf,
 
         /* parse and compile value */
 
-        if (rule->opcode != NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_CLEAR
-            && rule->opcode != NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_CLEAR_ALL
-            && rule->opcode != NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_PASS)
+        if (rule->opcode != NGX_HTTP_PROXY_ARGS_CONTROL_CLEAR
+            && rule->opcode != NGX_HTTP_PROXY_ARGS_CONTROL_CLEAR_ALL
+            && rule->opcode != NGX_HTTP_PROXY_ARGS_CONTROL_PASS)
         {
             if (cf->args->nelts <= cur) {
                 ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
@@ -1167,12 +1167,12 @@ ngx_http_proxy_request_cookies_control_directive(ngx_conf_t *cf,
 
 
 static void *
-ngx_http_proxy_request_cookies_control_create_loc_conf(ngx_conf_t *cf)
+ngx_http_proxy_args_control_create_loc_conf(ngx_conf_t *cf)
 {
-    ngx_http_proxy_request_cookies_control_loc_conf_t  *conf;
+    ngx_http_proxy_args_control_loc_conf_t  *conf;
 
     conf = ngx_pcalloc(cf->pool,
-                    sizeof(ngx_http_proxy_request_cookies_control_loc_conf_t));
+                    sizeof(ngx_http_proxy_args_control_loc_conf_t));
     if (conf == NULL) {
         return NULL;
     }
@@ -1182,16 +1182,16 @@ ngx_http_proxy_request_cookies_control_create_loc_conf(ngx_conf_t *cf)
 
 
 static char *
-ngx_http_proxy_request_cookies_control_merge_loc_conf(ngx_conf_t *cf,
+ngx_http_proxy_args_control_merge_loc_conf(ngx_conf_t *cf,
     void *parent, void *child)
 {
-    ngx_http_proxy_request_cookies_control_loc_conf_t  *prev = parent;
-    ngx_http_proxy_request_cookies_control_loc_conf_t  *conf = child;
+    ngx_http_proxy_args_control_loc_conf_t  *prev = parent;
+    ngx_http_proxy_args_control_loc_conf_t  *conf = child;
     ngx_uint_t                                         i, j;
     ngx_uint_t                                         orig_len, prev_len;
     ngx_uint_t                                         copy_count, pos;
-    ngx_http_proxy_request_cookies_control_rule_t     *prev_r, *r;
-    ngx_http_proxy_request_cookies_control_bitmap_t    disable_map;
+    ngx_http_proxy_args_control_rule_t     *prev_r, *r;
+    ngx_http_proxy_args_control_bitmap_t    disable_map;
 
     if (conf->rules == NULL || conf->rules->nelts == 0) {
         conf->rules = prev->rules;
@@ -1204,7 +1204,7 @@ ngx_http_proxy_request_cookies_control_merge_loc_conf(ngx_conf_t *cf,
         r = conf->rules->elts;
         prev_r = prev->rules->elts;
 
-        if (ngx_http_proxy_request_cookies_control_bitmap_init(
+        if (ngx_http_proxy_args_control_bitmap_init(
                 &disable_map, prev->rules_cnt, cf->pool)
             != NGX_OK)
         {
@@ -1214,7 +1214,7 @@ ngx_http_proxy_request_cookies_control_merge_loc_conf(ngx_conf_t *cf,
         for (i = 0; i < orig_len; i++) {
 
             if (r[i].filter || r[i].next
-                || r[i].opcode == NGX_HTTP_PROXY_REQUEST_COOKIES_CONTROL_KEEP
+                || r[i].opcode == NGX_HTTP_PROXY_ARGS_CONTROL_KEEP
                 || r[i].wildcard)
             {
                 continue;
@@ -1237,7 +1237,7 @@ ngx_http_proxy_request_cookies_control_merge_loc_conf(ngx_conf_t *cf,
                     continue;
                 }
 
-                ngx_http_proxy_request_cookies_control_bitmap_set(&disable_map,
+                ngx_http_proxy_args_control_bitmap_set(&disable_map,
                                                                   prev_r[j].id);
             }
         }
@@ -1245,7 +1245,7 @@ ngx_http_proxy_request_cookies_control_merge_loc_conf(ngx_conf_t *cf,
         copy_count = 0;
 
         for (j = 0; j < prev_len; j++) {
-            if (ngx_http_proxy_request_cookies_control_bitmap_isset(
+            if (ngx_http_proxy_args_control_bitmap_isset(
                     &disable_map, prev_r[j].id)
                 != NGX_OK)
             {
@@ -1262,7 +1262,7 @@ ngx_http_proxy_request_cookies_control_merge_loc_conf(ngx_conf_t *cf,
             pos = orig_len;
 
             for (j = 0; j < prev_len; j++) {
-                if (ngx_http_proxy_request_cookies_control_bitmap_isset(
+                if (ngx_http_proxy_args_control_bitmap_isset(
                         &disable_map, prev_r[j].id)
                     != NGX_OK)
                 {
