@@ -466,13 +466,13 @@ ngx_http_proxy_args_control_exec_rule(ngx_http_request_t *r,
     argument = (*arguments)->elts;
 
     if (rule->opcode == NGX_HTTP_PROXY_ARGS_CONTROL_CLEAR_ALL) {
-        *changed = 1;
 
         for (i = 0; i < (*arguments)->nelts; i++) {
             if (argument[i].cleared) {
                 continue;
             }
             argument[i].cleared = 1;
+            *changed = 1;
         }
 
         return NGX_OK;
