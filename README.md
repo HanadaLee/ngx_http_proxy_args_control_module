@@ -51,6 +51,9 @@ http {
             # Clear arguments with a prefix.
             proxy_arg_control clear utm_*;
 
+            # Clear arguments with an empty key, such as "=value" or an empty segment in "a=1&&b=2".
+            proxy_arg_control clear '';
+
             # Keep arguments. Other arguments will be cleared.
             proxy_arg_control keep e f g;
 
@@ -107,6 +110,8 @@ The following operators are supported:
 | `clear`   | Removes an argument from the proxy URI. Prefix wildcards such as `utm_*` are supported. If argument name is `*`, all arguments will be cleared. |
 | `keep`    | Keeps specified arguments. Multiple argument names can be provided. Other arguments will be cleared.                        |
 | `pass`    | No-op; explicitly passes an argument through and disables later same-name rules.                                         |
+
+Use `''` as the argument name to match arguments with an empty key, including `=value`, `=`, and empty segments produced by leading, trailing, or adjacent `&` characters.
 
 The following parameters are supported:
 

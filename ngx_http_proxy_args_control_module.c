@@ -51,7 +51,7 @@ typedef struct {
 typedef struct {
     ngx_str_t                                name;
     ngx_str_t                                value;
-    ngx_uint_t                               has_value;
+    ngx_uint_t                               has_equal;
     ngx_uint_t                               cleared;
 } ngx_http_proxy_args_control_arg_t;
 
@@ -215,24 +215,11 @@ ngx_http_proxy_args_control_parse_arg_value(ngx_http_request_t *r,
     start = src->data;
     end = src->data + src->len;
 
-    while (start < end) {
-
-        while (start < end && *start == '&') {
-            start++;
-        }
-
-        if (start == end) {
-            break;
-        }
+    for ( ;; ) {
 
         last = ngx_strlchr(start, end, '&');
         if (last == NULL) {
             last = end;
-        }
-
-        if (last == start) {
-            start = last;
-            continue;
         }
 
         arg = ngx_array_push(args);
@@ -246,19 +233,23 @@ ngx_http_proxy_args_control_parse_arg_value(ngx_http_request_t *r,
             arg->name.len = last - start;
             arg->value.data = last;
             arg->value.len = 0;
-            arg->has_value = 0;
+            arg->has_equal = 0;
 
         } else {
             arg->name.data = start;
             arg->name.len = eq - start;
             arg->value.data = eq + 1;
             arg->value.len = last - eq - 1;
-            arg->has_value = 1;
+            arg->has_equal = 1;
         }
 
         arg->cleared = 0;
 
-        start = last;
+        if (last == end) {
+            break;
+        }
+
+        start = last + 1;
     }
 
     return NGX_OK;
@@ -542,7 +533,7 @@ ngx_http_proxy_args_control_exec_rule(ngx_http_request_t *r,
 
         argument->name = rule->name;
         argument->value = value;
-        argument->has_value = 1;
+        argument->has_equal = 1;
         argument->cleared = 0;
         *changed = 1;
 
@@ -581,7 +572,7 @@ ngx_http_proxy_args_control_exec_rule(ngx_http_request_t *r,
         }
 
         argument[i].value = value;
-        argument[i].has_value = 1;
+        argument[i].has_equal = 1;
         *changed = 1;
     }
 
@@ -603,7 +594,7 @@ ngx_http_proxy_args_control_exec_rule(ngx_http_request_t *r,
 
     argument->name = rule->name;
     argument->value = value;
-    argument->has_value = 1;
+    argument->has_equal = 1;
     argument->cleared = 0;
     *changed = 1;
 
@@ -630,7 +621,7 @@ ngx_http_proxy_args_control_rebuild_uri(ngx_http_request_t *r,
 
         args_len += arg[i].name.len + 1;
 
-        if (arg[i].has_value) {
+        if (arg[i].has_equal) {
             args_len += 1 + arg[i].value.len;
         }
     }
@@ -684,7 +675,7 @@ ngx_http_proxy_args_control_rebuild_uri(ngx_http_request_t *r,
 
         p = ngx_copy(p, arg[i].name.data, arg[i].name.len);
 
-        if (arg[i].has_value) {
+        if (arg[i].has_equal) {
             *p++ = '=';
             p = ngx_copy(p, arg[i].value.data, arg[i].value.len);
         }
@@ -739,6 +730,10 @@ ngx_http_proxy_args_control_match_name(ngx_str_t *name,
 {
     if (name->len != pattern->len) {
         return NGX_DECLINED;
+    }
+
+    if (name->len == 0) {
+        return NGX_OK;
     }
 
     if (ignore_case) {
@@ -906,12 +901,6 @@ ngx_http_proxy_args_control_directive(ngx_conf_t *cf,
 
         for ( /* void */ ; cur < cf->args->nelts; cur++) {
 
-            if (arg[cur].len == 0) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                   "argument name is empty");
-                return NGX_CONF_ERROR;
-            }
-
             if (arg[cur].len > 3
                 && ngx_strncmp(arg[cur].data, "if=", 3) == 0)
             {
@@ -962,13 +951,8 @@ ngx_http_proxy_args_control_directive(ngx_conf_t *cf,
 
         rule->name = arg[cur];
 
-        if (rule->name.len == 0) {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "argument name is empty");
-            return NGX_CONF_ERROR;
-        }
-
-        rule->wildcard = (rule->name.data[rule->name.len - 1] == '*');
+        rule->wildcard = (rule->name.len != 0
+                          && rule->name.data[rule->name.len - 1] == '*');
 
         if (rule->wildcard) {
             if (rule->opcode != NGX_HTTP_PROXY_ARGS_CONTROL_CLEAR) {
