@@ -13,6 +13,7 @@ An NGINX module for fine-grained upstream proxy URI query argument control.
 - [Status](#status)
 - [Synopsis](#synopsis)
 - [Installation](#installation)
+- [Conditional syntax](#conditional-syntax)
 - [Directives](#directives)
   - [proxy\_arg\_control](#proxy_arg_control)
 - [Author](#author)
@@ -60,8 +61,11 @@ http {
             # Pass an argument through and disable later same-name rules.
             proxy_arg_control pass token;
 
-            # Conditional filtering. Only effective if variable $http_a is not empty or '0'.
-            proxy_arg_control set h 4 if=$http_a;
+            # With ngx_condition_module.
+            condition has_header_a is_not_empty $http_a;
+            when has_header_a {
+                proxy_arg_control set h 4;
+            }
 
             # With the `-i` option, the argument name will be case-insensitive.
             proxy_arg_control set -i i 1;
@@ -87,15 +91,26 @@ To use these modules, configure your nginx branch with:
     --add-module=/path/to/ngx_http_proxy_args_control_module
 ```
 
+To enable named conditions, add `--add-module=/path/to/ngx_condition_module` to the same static nginx build.
+
+# Conditional syntax
+
+Conditional syntax is selected at compile time:
+
+- With `ngx_condition_module`, use named `condition` expressions and place `proxy_arg_control` inside an `http`, `server`, or `location` `when` block. `if=` and `if!=` parameters are rejected.
+- Without `ngx_condition_module`, `when` is unavailable and legacy `if=`/`if!=` parameters remain supported. `if=` matches a non-empty value other than `"0"`; `if!=` matches an empty value or `"0"`.
+
+If a condition does not match, the rule is skipped and does not stop later rules for the same argument. The directive also remains valid in nginx's native `if` block inside a location; that context is separate from a condition-module `when` block.
+
 # Directives
 
 ## proxy_arg_control
 
-**Syntax:** `proxy_arg_control operator [-i] [-n] [-b] arg_name [value] [if=condition|if!=condition];`
+**Syntax:** `proxy_arg_control operator [-i] [-n] [-b] arg_name [value ...];`
 
 **Default:** —
 
-**Context:** http, server, location
+**Context:** http, server, location, location if, http when, server when, location when
 
 Controls the query arguments in the upstream proxy URI. The module reads the full proxy URI, applies rules to the query string, rebuilds the URI, and writes it back before proxying.
 
@@ -120,8 +135,8 @@ The following parameters are supported:
 | `-i` | Makes the argument name case-insensitive. When an existing argument is matched and needs to be set or rewritten, only its value is modified. The original name is preserved. |
 | `-n` | By default, once an argument name is matched, subsequent rules for that name are skipped. This flag continues evaluating later rules for the same argument name after this rule is applied. Wildcard `clear` and `keep` rules are not affected and always continue. |
 | `-b` | Stops evaluating subsequent argument rules and outputs the final result after this rule applies. |
-| `if=condition`  | Evaluates the rule only if the condition value is not empty and not `0`. |
-| `if!=condition`  | Evaluates the rule only if the condition value is empty or `0`. |
+| `if=condition` | Legacy-only: evaluates the rule if the value is non-empty and not `0`. |
+| `if!=condition` | Legacy-only: evaluates the rule if the value is empty or `0`. |
 
 # Author
 

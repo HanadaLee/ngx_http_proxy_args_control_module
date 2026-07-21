@@ -14,6 +14,10 @@
 
 #include <ngx_http_proxy_filter_module.h>
 
+#if (NGX_CONDITION)
+#include <ngx_http_condition_module.h>
+#endif
+
 
 typedef enum {
     NGX_HTTP_PROXY_ARGS_CONTROL_SET = 0,
@@ -32,8 +36,12 @@ typedef struct {
     ngx_str_t                                name;
     ngx_array_t                             *name_list;
     ngx_http_complex_value_t                *value;
+#if (NGX_CONDITION)
+    ngx_condition_expr_id_t                  expr_id;
+#else
     ngx_http_complex_value_t                *filter;
     ngx_flag_t                               negative;
+#endif
     ngx_flag_t                               ignore_case;
     ngx_flag_t                               next;
     ngx_flag_t                               break_flag;
@@ -108,6 +116,10 @@ static ngx_command_t  ngx_http_proxy_args_control_commands[] = {
 
     { ngx_string("proxy_arg_control"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
+#if (NGX_CONDITION)
+                        |NGX_HTTP_MAIN_WHEN_CONF|NGX_HTTP_SRV_WHEN_CONF
+                        |NGX_HTTP_LOC_WHEN_CONF
+#endif
                         |NGX_CONF_2MORE,
       ngx_http_proxy_args_control_directive,
       NGX_HTTP_LOC_CONF_OFFSET,
@@ -433,6 +445,13 @@ ngx_http_proxy_args_control_exec_rule(ngx_http_request_t *r,
 
     *changed = 0;
 
+#if (NGX_CONDITION)
+    if (ngx_http_condition_get_expr_result(r, rule->expr_id)
+        != NGX_CONDITION_EXPR_HIT)
+    {
+        return NGX_DECLINED;
+    }
+#else
     if (rule->filter) {
         if (ngx_http_complex_value(r, rule->filter, &value) != NGX_OK) {
             return NGX_ERROR;
@@ -449,6 +468,7 @@ ngx_http_proxy_args_control_exec_rule(ngx_http_request_t *r,
             }
         }
     }
+#endif
 
     if (rule->opcode == NGX_HTTP_PROXY_ARGS_CONTROL_PASS) {
         return NGX_OK;
@@ -780,7 +800,10 @@ ngx_http_proxy_args_control_directive(ngx_conf_t *cf,
 {
     ngx_http_proxy_args_control_loc_conf_t *clcf = conf;
 
-    ngx_str_t                           *arg, s, *n;
+    ngx_str_t                           *arg, *n;
+#if !(NGX_CONDITION)
+    ngx_str_t                            s;
+#endif
     ngx_uint_t                           cur;
     ngx_http_compile_complex_value_t     ccv;
     ngx_http_proxy_args_control_rule_t  *rule;
@@ -808,6 +831,10 @@ ngx_http_proxy_args_control_directive(ngx_conf_t *cf,
     }
 
     ngx_memzero(rule, sizeof(ngx_http_proxy_args_control_rule_t));
+
+#if (NGX_CONDITION)
+    rule->expr_id = ngx_condition_get_associated_expr_id(cf);
+#endif
 
     /* parse operation */
 
@@ -1001,8 +1028,8 @@ ngx_http_proxy_args_control_directive(ngx_conf_t *cf,
         }
     }
 
+#if !(NGX_CONDITION)
     /* parse if= / if!= */
-
     if (cf->args->nelts > cur) {
 
         if (arg[cur].len > 3
@@ -1042,6 +1069,7 @@ ngx_http_proxy_args_control_directive(ngx_conf_t *cf,
         rule->filter = ccv.complex_value;
         cur++;
     }
+#endif
 
     if (cf->args->nelts > cur) {
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
@@ -1077,6 +1105,7 @@ ngx_http_proxy_args_control_merge_loc_conf(ngx_conf_t *cf,
     ngx_http_proxy_args_control_loc_conf_t  *prev = parent;
     ngx_http_proxy_args_control_loc_conf_t  *conf = child;
 
+    ngx_flag_t                            conditional;
     ngx_uint_t                            i, j, orig_len, prev_len,
                                           copy_count, pos;
     ngx_http_proxy_args_control_rule_t   *prev_r, *r;
@@ -1107,7 +1136,13 @@ ngx_http_proxy_args_control_merge_loc_conf(ngx_conf_t *cf,
 
     for (i = 0; i < orig_len; i++) {
 
-        if (r[i].filter || r[i].next
+#if (NGX_CONDITION)
+        conditional = r[i].expr_id != NGX_CONDITION_NO_EXPR_ID;
+#else
+        conditional = r[i].filter != NULL;
+#endif
+
+        if (conditional || r[i].next
             || r[i].opcode == NGX_HTTP_PROXY_ARGS_CONTROL_KEEP
             || r[i].wildcard)
         {
