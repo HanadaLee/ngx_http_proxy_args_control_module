@@ -267,6 +267,7 @@ ngx_http_proxy_args_control_parse_arg_value(ngx_http_request_t *r,
     return NGX_OK;
 }
 
+
 static ngx_int_t
 ngx_http_proxy_args_control_filter(ngx_http_request_t *r,
     ngx_http_proxy_filter_ctx_t *ctx)
@@ -285,6 +286,7 @@ ngx_http_proxy_args_control_filter(ngx_http_request_t *r,
 
     return NGX_DECLINED;
 }
+
 
 static ngx_int_t
 ngx_http_proxy_args_control_exec(ngx_http_request_t *r,
@@ -408,6 +410,7 @@ ngx_http_proxy_args_control_exec(ngx_http_request_t *r,
     return ngx_http_proxy_filter_set_uri(r, ctx, &new_uri);
 }
 
+
 static ngx_int_t
 ngx_http_proxy_args_control_parse_uri_args(ngx_http_request_t *r,
     ngx_str_t *uri, ngx_str_t *path, ngx_array_t *args)
@@ -432,6 +435,7 @@ ngx_http_proxy_args_control_parse_uri_args(ngx_http_request_t *r,
 
     return ngx_http_proxy_args_control_parse_arg_value(r, &query, args);
 }
+
 
 static ngx_int_t
 ngx_http_proxy_args_control_exec_rule(ngx_http_request_t *r,
@@ -482,6 +486,7 @@ ngx_http_proxy_args_control_exec_rule(ngx_http_request_t *r,
             if (argument[i].cleared) {
                 continue;
             }
+
             argument[i].cleared = 1;
             *changed = 1;
         }
