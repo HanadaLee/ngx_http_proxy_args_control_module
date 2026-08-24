@@ -343,13 +343,10 @@ ngx_http_proxy_args_control_exec(ngx_http_request_t *r,
                     continue;
                 }
 
-                if (rule[i].name.len != rule[j].name.len) {
-                    continue;
-                }
-
-                if (ngx_strncasecmp(rule[i].name.data, rule[j].name.data,
-                                    rule[i].name.len)
-                    != 0)
+                if (ngx_http_proxy_args_control_match_name(
+                        &rule[i].name, &rule[j].name,
+                        rule[i].ignore_case || rule[j].ignore_case)
+                    != NGX_OK)
                 {
                     continue;
                 }
@@ -1160,13 +1157,10 @@ ngx_http_proxy_args_control_merge_loc_conf(ngx_conf_t *cf,
                 continue;
             }
 
-            if (r[i].name.len != prev_r[j].name.len) {
-                continue;
-            }
-
-            if (ngx_strncasecmp(r[i].name.data, prev_r[j].name.data,
-                                r[i].name.len)
-                != 0)
+            if (ngx_http_proxy_args_control_match_name(
+                    &r[i].name, &prev_r[j].name,
+                    r[i].ignore_case || prev_r[j].ignore_case)
+                != NGX_OK)
             {
                 continue;
             }
