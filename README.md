@@ -61,8 +61,8 @@ http {
             # Pass an argument through and disable later same-name rules.
             proxy_arg_control pass token;
 
-            # With ngx_condition_module.
-            condition has_header_a is_not_empty $http_a;
+            # With ngx_expr_module.
+            expr has_header_a !is_empty $http_a;
             when has_header_a {
                 proxy_arg_control set h 4;
             }
@@ -91,14 +91,14 @@ To use these modules, configure your nginx branch with:
     --add-module=/path/to/ngx_http_proxy_args_control_module
 ```
 
-To enable named conditions, add `--add-module=/path/to/ngx_condition_module` to the same static nginx build.
+To enable named conditions, add `--add-module=/path/to/ngx_expr_module` to the same static nginx build.
 
 # Conditional syntax
 
 Conditional syntax is selected at compile time:
 
-- With `ngx_condition_module`, use named `condition` expressions and place `proxy_arg_control` inside an `http`, `server`, or `location` `when` block. `if=` and `if!=` parameters are rejected.
-- Without `ngx_condition_module`, `when` is unavailable and legacy `if=`/`if!=` parameters remain supported. `if=` matches a non-empty value other than `"0"`; `if!=` matches an empty value or `"0"`.
+- With `ngx_expr_module`, use named `expr` expressions and place `proxy_arg_control` inside an `http`, `server`, or `location` `when` block. `if=` and `if!=` parameters are rejected.
+- Without `ngx_expr_module`, `when` is unavailable and legacy `if=`/`if!=` parameters remain supported. `if=` matches a non-empty value other than `"0"`; `if!=` matches an empty value or `"0"`.
 
 If a condition does not match, the rule is skipped and does not stop later rules for the same argument. The directive also remains valid in nginx's native `if` block inside a location; that context is separate from a condition-module `when` block.
 
