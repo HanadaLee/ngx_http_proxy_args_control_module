@@ -18,11 +18,12 @@ use Test::Nginx qw/ :DEFAULT http_content /;
 select STDERR; $| = 1;
 select STDOUT; $| = 1;
 
-my $t = Test::Nginx->new()->has(qw/http proxy rewrite ngx_expr_module
+my $t = Test::Nginx->new()->has(qw/http proxy rewrite
 	ngx_http_proxy_filter_module ngx_http_proxy_args_control_module/)
 	->plan(25);
 
-$t->write_file_expand('nginx.conf', <<'EOF');
+my $expr = $t->has_module('ngx_expr_module');
+my $config = <<'EOF';
 
 %%TEST_GLOBALS%%
 
@@ -172,6 +173,11 @@ http {
 
 EOF
 
+unless ($expr) {
+	$config =~ s/^        expr [^;]+;\n//mg;
+	$config =~ s/^            when \w+ \{\n.*?^            \}\n//msg;
+}
+$t->write_file_expand('nginx.conf', $config);
 $t->run();
 
 ###############################################################################
@@ -217,14 +223,17 @@ is(body('/case-rules?Foo=old&foo=old'),
 	'/case-rules?Foo=upper&foo=lower',
 	'distinct case-sensitive rule names are evaluated independently');
 
-is(body('/conditional?mode=hit&result=old'),
-	'/conditional?result=selected',
-	'matching condition wins in configuration order');
-is(body('/conditional?mode=miss&result=old'),
-	'/conditional?result=fallback',
-	'condition miss falls through to the unconditional rule');
-is(body('/order?mode=hit&result=old'), '/order?result=first',
-	'first unconditional rule wins over a later matching condition');
+SKIP: {
+	skip 'requires ngx_expr_module', 3 unless $expr;
+	is(body('/conditional?mode=hit&result=old'),
+		'/conditional?result=selected',
+		'matching condition wins in configuration order');
+	is(body('/conditional?mode=miss&result=old'),
+		'/conditional?result=fallback',
+		'condition miss falls through to the unconditional rule');
+	is(body('/order?mode=hit&result=old'), '/order?result=first',
+		'first unconditional rule wins over a later matching condition');
+}
 
 is(body('/inherit/test?a=1'), '/inherit/test?a=1&child=c&parent=p',
 	'child rules run before inherited parent rules');
